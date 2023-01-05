@@ -1,0 +1,65 @@
+Arduino Codes For Finger Movements
+
+import com.leapmotion.leap.*;
+import processing.serial.*;
+import org.firmata.*;
+import cc.arduino.*;
+Arduino arduino;
+Serial port;
+//Opposable Thumb
+int opposableServo = 7;
+//Thumb
+int thumbServo = 5;
+//Index
+int indexServo = 2;
+//Middle
+int middleServo = 3;
+//Ring and Pinky
+int ringpinkyServo = 4;
+//Wrist
+int wristServo = 6;
+//Setup LeapMotion Controller
+Controller controller = new Controller();
+//Setup
+void setup()
+{
+//Size of data/image
+size(500, 500);
+//Background color
+background(255);
+//Setup the servos and serial communication
+printArray(Arduino.list());
+arduino = new Arduino(this, Arduino.list()[0], 57600);
+arduino.pinMode(opposableServo, Arduino.SERVO);
+arduino.pinMode(thumbServo, Arduino.SERVO);
+arduino.pinMode(indexServo, Arduino.SERVO);
+arduino.pinMode(middleServo, Arduino.SERVO);
+arduino.pinMode(ringpinkyServo, Arduino.SERVO);
+arduino.pinMode(wristServo, Arduino.SERVO);
+if(controller.isConnected()) {
+DeviceList connectedLeaps = controller.devices();
+println("Connected Leap(s): " + connectedLeaps.toString());
+}
+}
+void draw() {
+//background color
+background(255);
+//Setup to capture frames
+Frame frame = controller.frame();
+/* ||||||||||||||||||||| WRIST ||||||||||||||||||||||| */
+//loop through each hand
+for (Hand hand : frame.hands()) {
+//Get roll (z axis) of palm and convert to degree
+float palmOrientation = hand.palmNormal().roll() * 180/PI;
+//arduino.servoWrite doesn't support float, so convert to integer and round to whole number
+int palmResults = (int) palmOrientation;
+//Print to console, the palm results
+println("WRIST: ", Math.abs(180 - palmResults));
+//Only include positive integers
+if(palmResults >= 0)
+{
+//Write to the servo, the palm results
+arduino.servoWrite(wristServo, Math.abs(180 - palmResults));
+}
+break;
+}
